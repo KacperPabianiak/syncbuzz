@@ -30,7 +30,11 @@
   // Presses closer than this get a "very close" tag. Sync is usually good to a
   // few ms; the hard worst case (half the round trip) is shown in tooltips.
   const CLOSE_MS = 10;
-  const PING_EVERY = 1500;
+  // Clock pings: frequent, so jittery connections still get enough clean
+  // samples. A faster burst right after connecting gets sync ready quickly.
+  const PING_EVERY = 500;
+  const PING_BURST = 20;
+  const PING_BURST_EVERY = 100;
   const HOST_PING_EVERY = 2000;
   const HOST_SILENCE = 12000; // host drops a player it hasn't heard from for this long
   const PLAYER_SILENCE = 9000; // player reconnects if the host is silent this long
@@ -203,13 +207,13 @@
       this.minRtt = null;
     }
     get ready() {
-      return this.offset !== null && this.samples.length >= 3;
+      return this.offset !== null && this.samples.length >= 5;
     }
     add(t0, th, t1) {
       const rtt = t1 - t0;
       if (!(rtt >= 0 && rtt < 10000) || !Number.isFinite(th)) return;
       this.samples.push({ lo: th - t1, hi: th - t0, at: t1, rtt });
-      while (this.samples.length > 1 && (t1 - this.samples[0].at > SYNC_WINDOW || this.samples.length > 60)) {
+      while (this.samples.length > 1 && (t1 - this.samples[0].at > SYNC_WINDOW || this.samples.length > 120)) {
         this.samples.shift();
       }
       for (;;) {
@@ -1192,7 +1196,7 @@
     P.everWelcomed = true;
     P.tries = 0;
     P.connMsg = '';
-    P.burst = 10;
+    P.burst = PING_BURST;
     clearTimeout(P.pingTimer);
     pingLoop();
     if (P.press && (P.press.status === 'queued' || P.press.status === 'sent')) sendPress();
@@ -1208,7 +1212,7 @@
     let delay = PING_EVERY;
     if (P.burst > 0) {
       P.burst--;
-      delay = 120;
+      delay = PING_BURST_EVERY;
     }
     P.pingTimer = setTimeout(pingLoop, delay);
   }

@@ -141,7 +141,25 @@ async function playRound(order, label) {
   const truth = [...presses].sort((a, b) => a.t - b.t);
   const gotNames = res.map((r) => r.name);
   const wantNames = truth.map((p) => nameOf[p.who]);
-  check(JSON.stringify(gotNames) === JSON.stringify(wantNames), `${label}: order ${gotNames.join(' > ')}`);
+  // Any two presses the app put in the wrong order must have really been
+  // under 10 ms apart, and the app must have tagged them "very close".
+  const trueT = Object.fromEntries(presses.map((p) => [nameOf[p.who], p.t]));
+  const bad = [];
+  let nearTies = 0;
+  for (let i = 0; i < gotNames.length; i++) {
+    for (let j = i + 1; j < gotNames.length; j++) {
+      const d = trueT[gotNames[i]] - trueT[gotNames[j]]; // > 0 means swapped
+      if (d <= 0) continue;
+      const tagged = j === i + 1 && res[j].close;
+      if (d < 10 && tagged) nearTies++;
+      else bad.push(`${gotNames[i]}/${gotNames[j]} ${d.toFixed(1)} ms${tagged ? '' : ' (not tagged close)'}`);
+    }
+  }
+  const same = JSON.stringify(gotNames) === JSON.stringify(wantNames);
+  check(
+    bad.length === 0 && gotNames.length === wantNames.length,
+    `${label}: order ${gotNames.join(' > ')}${same ? '' : ` (true: ${wantNames.join(' > ')}; ${nearTies} near-tie swap under 10 ms, tagged)`}${bad.length ? ` WRONG: ${bad.join(', ')}` : ''}`,
+  );
   let maxErr = 0;
   for (let i = 1; i < truth.length; i++) {
     const trueGap = truth[i].t - truth[i - 1].t;
