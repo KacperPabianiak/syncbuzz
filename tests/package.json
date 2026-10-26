@@ -1,0 +1,12 @@
+{
+  "name": "syncbuzz-tests",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node e2e.mjs",
+    "test:file": "node file-mode.mjs ../syncbuzz.html"
+  },
+  "devDependencies": {
+    "puppeteer-core": "25.16.0"
+  }
+}
