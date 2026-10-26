@@ -1353,6 +1353,7 @@
     $('msgText').textContent = text;
     $('topStatus').hidden = true;
     $('roomBadge').hidden = true;
+    $('btnLeave').hidden = true;
     showScreen('msg');
   }
 
@@ -1533,6 +1534,10 @@
     const badge = $('roomBadge');
     badge.hidden = false;
     badge.textContent = `Room ${fmtCode(MODE === 'host' ? H.code : P.code)}`;
+    const leave = $('btnLeave');
+    leave.hidden = MODE !== 'player';
+    setText(leave, armedKey === 'leave' ? 'Click again to leave' : 'Leave room');
+    leave.classList.toggle('armed', armedKey === 'leave');
     const box = $('topStatus');
     box.hidden = false;
     let cls = 'warn';
@@ -1786,10 +1791,6 @@
       list.replaceChildren(...rows);
     }
     setText($('playersTitle'), `Players · ${online} online`);
-    const leave = $('btnLeave');
-    leave.hidden = MODE !== 'player';
-    leave.textContent = armedKey === 'leave' ? 'Click again to leave' : 'Leave room';
-    leave.classList.toggle('armed', armedKey === 'leave');
   }
 
   function renderAll() {

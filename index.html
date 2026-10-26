@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-gdX1hoGl33NhVy2rQ5gxb+VDetpjx6oP9HhNe89M0PQ='; style-src 'sha256-TNaa4UpOLlhi+eMBa+KSYPWrsXgEXX2tSeYpEQKwFO0='; connect-src wss://0.peerjs.com https://0.peerjs.com; img-src data:; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-6yiwkc9t9+WEaFO3J+uo8iUAaZ8z7W6wqhpq0SmBjOA='; style-src 'sha256-NF5GtFnd+Fck1cUGPPmsVFQyrHDzdpm35SeLvYGRllg='; connect-src wss://0.peerjs.com https://0.peerjs.com; img-src data:; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="light dark">
 <title>SyncBuzz</title>
@@ -269,7 +269,9 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .buzz:focus-visib
 .settings select { padding: 8px 10px; }
 .check { display: flex; align-items: center; gap: 9px; font-size: 14px; margin-bottom: 8px; cursor: pointer; }
 .check input { width: 17px; height: 17px; margin: 0; accent-color: var(--accent); }
-#btnClose, #btnLeave { align-self: flex-start; }
+#btnClose { align-self: flex-start; }
+/* Small pill-shaped button that sits in the top bar next to the badges. */
+.btn-top { padding: 3px 10px; font-size: 12.5px; border-radius: 999px; white-space: nowrap; }
 
 /* ---------- players ---------- */
 .players { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
@@ -295,6 +297,7 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .buzz:focus-visib
   <div class="top-right">
     <span id="lagBadge" class="badge badge-warn" hidden></span>
     <span id="roomBadge" class="badge" hidden></span>
+    <button id="btnLeave" class="btn btn-ghost btn-small danger btn-top" type="button" hidden>Leave room</button>
     <span id="topStatus" class="status" hidden><span class="dot"></span><span id="topStatusText"></span></span>
   </div>
 </header>
@@ -409,7 +412,6 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .buzz:focus-visib
         <div id="playersPanel" class="card panel">
           <h3 id="playersTitle">Players</h3>
           <ul id="playersList" class="players"></ul>
-          <button id="btnLeave" class="btn btn-ghost btn-small danger" type="button" hidden>Leave room</button>
         </div>
       </aside>
     </div>
@@ -1790,6 +1792,7 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .buzz:focus-visib
     $('msgText').textContent = text;
     $('topStatus').hidden = true;
     $('roomBadge').hidden = true;
+    $('btnLeave').hidden = true;
     showScreen('msg');
   }
 
@@ -1970,6 +1973,10 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .buzz:focus-visib
     const badge = $('roomBadge');
     badge.hidden = false;
     badge.textContent = `Room ${fmtCode(MODE === 'host' ? H.code : P.code)}`;
+    const leave = $('btnLeave');
+    leave.hidden = MODE !== 'player';
+    setText(leave, armedKey === 'leave' ? 'Click again to leave' : 'Leave room');
+    leave.classList.toggle('armed', armedKey === 'leave');
     const box = $('topStatus');
     box.hidden = false;
     let cls = 'warn';
@@ -2223,10 +2230,6 @@ input:focus-visible, select:focus-visible, .btn:focus-visible, .buzz:focus-visib
       list.replaceChildren(...rows);
     }
     setText($('playersTitle'), `Players · ${online} online`);
-    const leave = $('btnLeave');
-    leave.hidden = MODE !== 'player';
-    leave.textContent = armedKey === 'leave' ? 'Click again to leave' : 'Leave room';
-    leave.classList.toggle('armed', armedKey === 'leave');
   }
 
   function renderAll() {
